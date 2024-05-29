@@ -1,0 +1,42 @@
+; ModuleID = 'example'
+source_filename = "example"
+
+declare i32 @println(i32)
+
+define i32 @"$A.test"() {
+entry:
+  ret i32 0
+}
+
+define i32 @count2(i32 %curr, i32 %endval) {
+entry:
+  %0 = alloca i32, align 4
+  store i32 %curr, ptr %0, align 4
+  %1 = alloca i32, align 4
+  store i32 %endval, ptr %1, align 4
+  %2 = load i32, ptr %0, align 4
+  %3 = load i32, ptr %1, align 4
+  %4 = icmp sle i32 %2, %3
+  br i1 %4, label %then.1, label %else.1
+
+end.1:                                            ; preds = %else.1, %then.1
+  ret i32 0
+
+then.1:                                           ; preds = %entry
+  %5 = load i32, ptr %0, align 4
+  %6 = call i32 @println(i32 %5)
+  %7 = load i32, ptr %0, align 4
+  %8 = add i32 %7, 1
+  %9 = load i32, ptr %1, align 4
+  %10 = call i32 @count2(i32 %8, i32 %9)
+  br label %end.1
+
+else.1:                                           ; preds = %entry
+  %11 = load i32, ptr %1, align 4
+  br label %end.1
+}
+
+define i32 @main() {
+entry:
+  ret i32 0
+}

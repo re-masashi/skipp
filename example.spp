@@ -1,0 +1,27 @@
+extern println(a: i32) -> i32;
+#extern create_person(age: i32, alive: bool) -> Person;
+#extern print_person(person: Person) -> void;
+
+class A{
+	def test()->i32 do
+	end
+
+	def init() -> i32 do
+	end
+}
+
+def count2(curr: i32, endval: i32) -> i32 do
+	if curr <= endval do
+		println(curr);
+		count2(curr+1, endval)
+	end else do
+		endval
+	end;
+end
+
+def main() -> i32 do
+#	let me: Person = create_person(7, true);
+#	print_person(me);
+	#count2(1,500000);
+	A();
+end
