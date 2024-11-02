@@ -1,27 +1,26 @@
 #include <stdio.h>
-#include <stdbool.h>
-#include <gc.h>
+#include <unordered_map>
+#include <string>
+#include <iostream>
+#include <variant>
+#include <memory>
+using namespace std;
 
 extern "C" {
-    struct Person {
-        int age;
-        bool alive;
-    };
-
-    void print_person(struct Person person) { // Add 'struct' keyword before Person
-        printf("alive person? %d\n", person.alive); // Access struct member 'alive' directly
-        printf("Age: %d %d\n", person.age, person.alive); // Access struct members 'age' and 'alive'
-    }
-
-    struct Person create_person(int age, bool alive) { // Add 'struct' keyword before Person
-        struct Person p = {age, alive}; // Initialize struct Person
-        print_person(p); // Call function to print person
-        return p; // Return the created person
-    }
 
     int println(int n) {
         printf("%d\n", n); // Print integer followed by a newline
         return n; // Return the integer
+    }
+
+    void show_umap(){
+        // skipp_runtime::umap["GeeksforGeeks"] = 10; 
+        // skipp_runtime::umap["Practice"] = 20;
+        // skipp_runtime::umap["Contribute"] = 30;
+        // // Traversing an unordered map 
+        // for (auto x : skipp_runtime::umap) 
+        //   cout << x.first << " " <<  
+        //           x.second << endl; 
     }
 
     int index_arr(int arr[], int i) {

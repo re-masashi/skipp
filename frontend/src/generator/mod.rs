@@ -96,9 +96,9 @@ impl Generator {
             self.module,
             c_str!("GC_malloc"),
             core::LLVMFunctionType(
-                self.void_type,
+                self.void_type(),
                 [self.i64_type()].as_mut_ptr(),
-                args.name.len() as u32, // name.len() == type_.len()
+                1, // name.len() == type_.len()
                 0,
             ),
         );
@@ -371,6 +371,7 @@ impl Generator {
     fn str_to_type(&self, ty: String) -> LLVMTypeRef{
         match ty.as_str(){
             "i32" => self.i32_type(),
+            "i64" => self.i32_type(),
             "bool"=>self.bool_type(),
             "void"=>self.void_type(), 
             // "string"=> 

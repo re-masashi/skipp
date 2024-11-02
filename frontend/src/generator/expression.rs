@@ -16,7 +16,6 @@ impl Generator {
                 return Ok(core::LLVMConstInt(self.i32_type(), *i as u64, false as i32));
             }
             ExprValue::Str(s) => {
-
                 return Ok(core::LLVMConstString(
                     c_str!(s),
                     s.len() as u32,
@@ -93,6 +92,7 @@ impl Generator {
                         self.i64_type(),
                         c_str!(""),
                     );
+                    println!("obj size {:?}", object_size);
                     println!("GC_malloc {:?}", core::LLVMGetNamedFunction(self.module, c_str!("GC_malloc")));
                     // NOT LINKED! 
                     let obj_void_ptr = core::LLVMBuildCall2(
@@ -118,17 +118,22 @@ impl Generator {
                         0,
                         c_str!("obj"),
                     );
+                    println!("vtable_field (obj pointer) {:?}", vtable_field);
                     let vtable = core::LLVMGetNamedGlobal(self.module, c_str!(vtable_name));
+                    println!("VTable {:?}", vtable);
+                    if vtable==std::ptr::null_mut() {
+                        panic!("No Vtable found for {:}", vtable_name);
+                    }
                     core::LLVMBuildStore(self.builder, vtable, vtable_field);
                     println!("Classes todo!");
-                    unimplemented!();
+                    return Ok(vtable)
                 }
 
-                if name.as_str()=="init_struct" {
-                    self.init();
-                    println!("INIT!");
-                    return Ok(core::LLVMConstInt(self.i32_type(), 0, false as i32));
-                }
+                // if name.as_str()=="init_struct" {
+                //     self.init();
+                //     println!("INIT!");
+                //     return Ok(core::LLVMConstInt(self.i32_type(), 0, false as i32));
+                // }
                 
                 let mut llvm_args: Vec<LLVMValueRef> = Vec::new();
                 for arg in args {

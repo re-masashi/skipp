@@ -1,6 +1,9 @@
 extern println(a: i32) -> i32;
 #extern create_person(age: i32, alive: bool) -> Person;
 #extern print_person(person: Person) -> void;
+extern show_umap() -> void;
+extern malloc(_: i64) -> void;
+
 
 class A{
 	def test()->i32 do
@@ -10,10 +13,12 @@ class A{
 	end
 }
 
-def count2(curr: i32, endval: i32) -> i32 do
+def count(curr: i32, endval: i32) -> i32 do
+	malloc(20);
+
 	if curr <= endval do
 		println(curr);
-		count2(curr+1, endval)
+		count(curr+1, endval)
 	end else do
 		endval
 	end;
@@ -22,6 +27,7 @@ end
 def main() -> i32 do
 #	let me: Person = create_person(7, true);
 #	print_person(me);
-	#count2(1,500000);
+	count(1,500);
+	show_umap();
 	A();
 end

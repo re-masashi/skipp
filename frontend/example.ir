@@ -1,19 +1,25 @@
 ; ModuleID = 'example'
 source_filename = "example"
 
+%"$_VTableA" = type opaque
+
+@"$_VTableA" = external global %"$_VTableA"
+
+declare void @GC_malloc(i64)
+
 declare i32 @println(i32)
 
-define i32 @"$A.test"() {
-entry:
-  ret i32 0
-}
+declare void @show_umap()
 
-define i32 @count2(i32 %curr, i32 %endval) {
+declare void @malloc(i32)
+
+define i32 @count(i32 %curr, i32 %endval) {
 entry:
   %0 = alloca i32, align 4
   store i32 %curr, ptr %0, align 4
   %1 = alloca i32, align 4
   store i32 %endval, ptr %1, align 4
+  call void @malloc(i32 20)
   %2 = load i32, ptr %0, align 4
   %3 = load i32, ptr %1, align 4
   %4 = icmp sle i32 %2, %3
@@ -28,7 +34,7 @@ then.1:                                           ; preds = %entry
   %7 = load i32, ptr %0, align 4
   %8 = add i32 %7, 1
   %9 = load i32, ptr %1, align 4
-  %10 = call i32 @count2(i32 %8, i32 %9)
+  %10 = call i32 @count(i32 %8, i32 %9)
   br label %end.1
 
 else.1:                                           ; preds = %entry
@@ -38,5 +44,7 @@ else.1:                                           ; preds = %entry
 
 define i32 @main() {
 entry:
+  %0 = call i32 @count(i32 1, i32 500)
+  call void @show_umap()
   ret i32 0
 }

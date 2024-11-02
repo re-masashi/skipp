@@ -28,13 +28,14 @@ impl Generator {
             2,
             0,
         );
+        core::LLVMAddGlobal(self.module, struct_lltype_vtable, c_str!("$_VTable".to_owned()+&class.name));
         self.gen_vtable(struct_lltype_vtable, class);
         (*self.classes.borrow_mut()).insert(class.name.clone());
     }
 
     pub unsafe fn gen_vtable(&self, vtable: LLVMTypeRef, class: &Class) {
+        let vtable = core::LLVMGetNamedGlobal(self.module, c_str!("$_VTable".to_owned()+&class.name));
         trace!("Generating vtable");
-        
     }
     
 }
