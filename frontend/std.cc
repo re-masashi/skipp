@@ -13,16 +13,6 @@ extern "C" {
         return n; // Return the integer
     }
 
-    void show_umap(){
-        // skipp_runtime::umap["GeeksforGeeks"] = 10; 
-        // skipp_runtime::umap["Practice"] = 20;
-        // skipp_runtime::umap["Contribute"] = 30;
-        // // Traversing an unordered map 
-        // for (auto x : skipp_runtime::umap) 
-        //   cout << x.first << " " <<  
-        //           x.second << endl; 
-    }
-
     int index_arr(int arr[], int i) {
         return arr[i]; // Return the value at index i in the array arr
     }

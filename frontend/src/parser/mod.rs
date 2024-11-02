@@ -4,6 +4,7 @@ use crate::SymbolTable;
 use std::fs::read_to_string;
 use std::io::BufRead;
 use std::iter::Peekable;
+use std::collections::HashMap;
 
 use std::vec::IntoIter;
 
@@ -37,6 +38,7 @@ pub enum AstNode {
     Extern(External),
     FunctionDef(Function),
     Class(Class),
+    Struct(String, HashMap<String, String>),
     Expression(ExprValue),
 }
 
@@ -121,7 +123,7 @@ pub struct Parser {
 pub struct Args {
     pub name: Vec<String>,
     pub type_: Vec<String>,
-} // I will  improvise this later.
+} // I will improve this later.
 
 impl Parser {
     pub fn new(tokens: TokenIter, file_path: &str) -> Self {

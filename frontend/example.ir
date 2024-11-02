@@ -1,50 +1,36 @@
 ; ModuleID = 'example'
 source_filename = "example"
 
-%"$_VTableA" = type opaque
+declare i32 @println(i32) local_unnamed_addr
 
-@"$_VTableA" = external global %"$_VTableA"
-
-declare void @GC_malloc(i64)
-
-declare i32 @println(i32)
-
-declare void @show_umap()
-
-declare void @malloc(i32)
-
-define i32 @count(i32 %curr, i32 %endval) {
+define i32 @count(i32 %curr, i32 %endval) local_unnamed_addr {
 entry:
-  %0 = alloca i32, align 4
-  store i32 %curr, ptr %0, align 4
-  %1 = alloca i32, align 4
-  store i32 %endval, ptr %1, align 4
-  call void @malloc(i32 20)
-  %2 = load i32, ptr %0, align 4
-  %3 = load i32, ptr %1, align 4
-  %4 = icmp sle i32 %2, %3
-  br i1 %4, label %then.1, label %else.1
+  %.not3.not = icmp sgt i32 %curr, %endval
+  br i1 %.not3.not, label %end.1, label %then.1
 
-end.1:                                            ; preds = %else.1, %then.1
+end.1:                                            ; preds = %then.1, %entry
   ret i32 0
 
-then.1:                                           ; preds = %entry
-  %5 = load i32, ptr %0, align 4
-  %6 = call i32 @println(i32 %5)
-  %7 = load i32, ptr %0, align 4
-  %8 = add i32 %7, 1
-  %9 = load i32, ptr %1, align 4
-  %10 = call i32 @count(i32 %8, i32 %9)
-  br label %end.1
-
-else.1:                                           ; preds = %entry
-  %11 = load i32, ptr %1, align 4
-  br label %end.1
+then.1:                                           ; preds = %entry, %then.1
+  %curr.tr4 = phi i32 [ %1, %then.1 ], [ %curr, %entry ]
+  %0 = tail call i32 @println(i32 %curr.tr4)
+  %1 = add i32 %curr.tr4, 1
+  %.not = icmp sgt i32 %1, %endval
+  br i1 %.not, label %end.1, label %then.1
 }
 
-define i32 @main() {
+define i32 @main() local_unnamed_addr {
 entry:
-  %0 = call i32 @count(i32 1, i32 500)
-  call void @show_umap()
+  br label %then.1.i
+
+then.1.i:                                         ; preds = %then.1.i, %entry
+  %curr.tr4.i = phi i32 [ %1, %then.1.i ], [ 1, %entry ]
+  %0 = tail call i32 @println(i32 %curr.tr4.i)
+  %1 = add nuw nsw i32 %curr.tr4.i, 1
+  %.not.i = icmp ugt i32 %curr.tr4.i, 499999
+  br i1 %.not.i, label %count.exit, label %then.1.i
+
+count.exit:                                       ; preds = %then.1.i
+  %2 = tail call i32 @println(i32 1)
   ret i32 0
 }

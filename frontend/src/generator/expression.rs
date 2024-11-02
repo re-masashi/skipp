@@ -86,20 +86,14 @@ impl Generator {
                         0,
                         c_str!("objptr"),
                     );
-                    let object_size = core::LLVMBuildPointerCast(
-                        self.builder,
-                        dummy_ptr,
-                        self.i64_type(),
-                        c_str!(""),
-                    );
-                    println!("obj size {:?}", object_size);
+                    // println!("obj size {:?}", object_size);
                     println!("GC_malloc {:?}", core::LLVMGetNamedFunction(self.module, c_str!("GC_malloc")));
                     // NOT LINKED! 
                     let obj_void_ptr = core::LLVMBuildCall2(
                         self.builder,
                         class,
                         core::LLVMGetNamedFunction(self.module, c_str!("GC_malloc")),
-                        [object_size].as_mut_ptr(),
+                        [core::LLVMConstInt(self.i32_type(), 4, false as i32)].as_mut_ptr(),
                         1,
                         c_str!("")
                     );
@@ -120,7 +114,7 @@ impl Generator {
                     );
                     println!("vtable_field (obj pointer) {:?}", vtable_field);
                     let vtable = core::LLVMGetNamedGlobal(self.module, c_str!(vtable_name));
-                    println!("VTable {:?}", vtable);
+                    // println!("VTable {:?}", vtable);
                     if vtable==std::ptr::null_mut() {
                         panic!("No Vtable found for {:}", vtable_name);
                     }

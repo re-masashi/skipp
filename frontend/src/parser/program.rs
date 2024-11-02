@@ -32,6 +32,14 @@ impl Parser {
                         Err(e) => return Err(e),
                     },
 
+                    TokenType::Struct => match self.parse_struct() {
+                        Ok(((name, result), pos)) => {
+                            ast.insert(ast.len(), (AstNode::Struct(name, result), pos));
+                        }
+                        Err(e) if e == *"EOF".to_string() => return Ok(ast),
+                        Err(e) => return Err(e),
+                    },
+
                     // TokenType::Module=>{
                     // 	match self.parse_module(){
                     // 		Ok((result, pos)) => {

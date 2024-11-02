@@ -20,6 +20,7 @@ pub enum TokenType {
     While,  // while
     Do,     // do
     End,    // end
+    Struct, // struct
 
     /// Literals
     Integer(i32),

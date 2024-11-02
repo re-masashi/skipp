@@ -47,7 +47,7 @@ pub fn main() {
         generator.init();
         unwrap_or_exit!(generator.generate(), "Code Generation");
         unwrap_or_exit!(generator.verify(), "LLVM");
-        // generator.optimize();
+        generator.optimize();
 
         let object_file = format!("{}.o", cli_input.input_name);
         

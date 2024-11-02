@@ -13,6 +13,9 @@ impl Generator {
                 AstNode::Class(c)=>{self.gen_class(c);},
                 AstNode::Expression(e)=>{self.gen_expression(e)?;},
                 AstNode::Extern(e)=>{self.gen_extern(e)?;},
+                AstNode::Struct(n, s)=>{
+                    self.gen_struct(n, s);
+                }
             }
             // self.gen_function(&function)?;
         }
