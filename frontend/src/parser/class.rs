@@ -35,8 +35,8 @@ impl Parser {
         while unwrap_some!(self.tokens.peek()).type_ != TokenType::RBrace {
             // println!("{:#?}", self.tokens.peek());
             match unwrap_some!(self.tokens.peek()).type_ {
-                TokenType::Def=>{},
-                _=>return Err(self.parser_error("SyntaxError: expected Function"))
+                TokenType::Def => {}
+                _ => return Err(self.parser_error("SyntaxError: expected Function")),
             }
             match self.parse_function() {
                 Ok((f, p)) => fns.insert(fns.len(), (f, p)),
@@ -51,8 +51,10 @@ impl Parser {
         Ok((Class { name, fns }, start))
     }
 
-    pub fn parse_struct(&mut self) -> Result<((String, HashMap<String, String>), NodePosition)> {
-        let mut members: HashMap<String, String> = HashMap::new();
+    pub fn parse_struct(
+        &mut self,
+    ) -> Result<((String, HashMap<String, (String, i32)>), NodePosition)> {
+        let mut members: HashMap<String, (String, i32)> = HashMap::new();
 
         // println!("{:#?}", self.tokens.peek());
 
@@ -77,29 +79,32 @@ impl Parser {
             _ => return Err("Expected '{' in struct".to_string()),
         }
 
+        let mut index = 0;
+
         while unwrap_some!(self.tokens.peek()).type_ != TokenType::RBrace {
             // println!("{:#?}", self.tokens.peek());
             let mut name = "".to_string();
             match &unwrap_some!(self.tokens.peek()).type_ {
-                TokenType::Identifier(n)=>{
+                TokenType::Identifier(n) => {
                     name = n.clone();
                     self.advance();
                     self.tokens.next();
-                },
-                _=>return Err(self.parser_error("SyntaxError: expected Identifier"))
+                }
+                _ => return Err(self.parser_error("SyntaxError: expected Identifier")),
             }
             self.advance();
             if let TokenType::Colon = unwrap_some!(self.tokens.next()).type_ {
-            }else{
-                return Err(self.parser_error("SyntaxError: expected colon"))                
+            } else {
+                return Err(self.parser_error("SyntaxError: expected colon"));
             }
 
             self.advance();
             if let TokenType::Identifier(type_) = unwrap_some!(self.tokens.next()).type_ {
-                members.insert(name.clone(), type_);
-            }else{
-                return Err(self.parser_error("SyntaxError: expected type"))                
+                members.insert(name.clone(), (type_, index));
+            } else {
+                return Err(self.parser_error("SyntaxError: expected type"));
             }
+            index += 1;
         }
         self.advance();
         self.tokens.next(); // eat '}'

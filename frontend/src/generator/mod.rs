@@ -1,7 +1,7 @@
+mod class;
 mod expression;
 mod function;
 mod program;
-mod class;
 
 use crate::c_str;
 use crate::parser::{AstNode, NodePosition};
@@ -41,7 +41,7 @@ pub struct Generator {
     /// number of if statements in the current function
     if_count: RefCell<i32>,
     /// struct name-type mapping
-    structs: RefCell<HashMap<String, (LLVMTypeRef, HashMap<String, String>)>>,
+    structs: RefCell<HashMap<String, (LLVMTypeRef, HashMap<String, (String, i32)>)>>,
     classes: RefCell<HashSet<String>>,
     /*
     {
@@ -77,7 +77,7 @@ impl Generator {
         }
     }
 
-    pub unsafe fn init(&self){
+    pub unsafe fn init(&self) {
         // let struct_lltype = core::LLVMStructCreateNamed(
         //     self.context,
         //     c_str!("Person")
@@ -90,7 +90,7 @@ impl Generator {
         // );
         // let mut field_data = HashMap::new();
         // field_data.insert(String::from("age"), String::from("i32"));
-        // field_data.insert(String::from("alive"), String::from("bool"));        
+        // field_data.insert(String::from("alive"), String::from("bool"));
         // (*self.structs.borrow_mut()).insert(String::from("Person"), (struct_lltype.clone(), field_data));
         let llvm_fn = core::LLVMAddFunction(
             self.module,
@@ -114,7 +114,7 @@ impl Generator {
         // let mut local_vars_mut = self.local_vars.borrow_mut();
 
         // let var = core::LLVMBuildAlloca(
-        //     self.builder, 
+        //     self.builder,
         //     core::LLVMGetTypeByName2(self.context, c_str!("Person")),
         //     c_str!("")
         // );
@@ -131,8 +131,8 @@ impl Generator {
 
         // drop(local_vars_mut);
 
-        // core::LLVMBuildStore(self.builder, 
-        //     struct_llval, 
+        // core::LLVMBuildStore(self.builder,
+        //     struct_llval,
         //     match self.local_vars.borrow().get(name) {
         //         Some((v, _))=>*v,
         //         None=>panic!("No such variable")
@@ -150,10 +150,10 @@ impl Generator {
 
     pub unsafe fn optimize(&self) {
         use llvm_sys::core::*;
-        use llvm_sys::transforms::pass_manager_builder::*;
         use llvm_sys::transforms::instcombine::LLVMAddInstructionCombiningPass;
-        use llvm_sys::transforms::vectorize::LLVMAddLoopVectorizePass;
+        use llvm_sys::transforms::pass_manager_builder::*;
         use llvm_sys::transforms::scalar::*;
+        use llvm_sys::transforms::vectorize::LLVMAddLoopVectorizePass;
 
         // Per clang and rustc, we want to use both kinds.
         let fpm = LLVMCreateFunctionPassManagerForModule(self.module);
@@ -187,7 +187,6 @@ impl Generator {
         // Clean up managers
         LLVMDisposePassManager(fpm);
         LLVMDisposePassManager(mpm);
-
     }
 
     /// Verify LLVM IR.
@@ -310,8 +309,8 @@ impl Generator {
     }
 
     fn no_terminator(&self) -> bool {
-        let block = unsafe {core::LLVMGetInsertBlock(self.builder)};
-        let terminator = unsafe {core::LLVMGetBasicBlockTerminator(block)};
+        let block = unsafe { core::LLVMGetInsertBlock(self.builder) };
+        let terminator = unsafe { core::LLVMGetBasicBlockTerminator(block) };
         return terminator.is_null();
     }
 
@@ -368,19 +367,19 @@ impl Generator {
         }
     }
 
-    fn str_to_type(&self, ty: String) -> LLVMTypeRef{
-        match ty.as_str(){
+    fn str_to_type(&self, ty: String) -> LLVMTypeRef {
+        match ty.as_str() {
             "i32" => self.i32_type(),
             "i64" => self.i32_type(),
-            "bool"=>self.bool_type(),
-            "void"=>self.void_type(), 
-            // "string"=> 
-            "str"=>self.pstr_type(), 
-            "intarr"=>self.parr_type(),
-            x=>{
-                print!("{:?}",x);
+            "bool" => self.bool_type(),
+            "void" => self.void_type(),
+            // "string"=>
+            "str" => self.pstr_type(),
+            "intarr" => self.parr_type(),
+            x => {
+                print!("{:?}", x);
                 match (self.structs.borrow()).get(x) {
-                    Some((ty,type_map)) => ty.clone(),
+                    Some((ty, type_map)) => ty.clone(),
                     None => panic!("No such struct {} found!", x),
                 }
             }

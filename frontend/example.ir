@@ -1,36 +1,47 @@
 ; ModuleID = 'example'
 source_filename = "example"
 
-declare i32 @println(i32) local_unnamed_addr
+%"$struct$Coord" = type { i32, i32, i32 }
 
-define i32 @count(i32 %curr, i32 %endval) local_unnamed_addr {
+@"$struct_ty$Coord" = external global %"$struct$Coord"
+
+declare void @GC_malloc(i64)
+
+declare i32 @println(i32)
+
+define i32 @count(i32 %curr, i32 %endval) {
 entry:
-  %.not3.not = icmp sgt i32 %curr, %endval
-  br i1 %.not3.not, label %end.1, label %then.1
+  %0 = alloca i32, align 4
+  store i32 %curr, ptr %0, align 4
+  %1 = alloca i32, align 4
+  store i32 %endval, ptr %1, align 4
+  %2 = load i32, ptr %0, align 4
+  %3 = call i32 @println(i32 %2)
+  %4 = load i32, ptr %0, align 4
+  %5 = load i32, ptr %0, align 4
+  %6 = load i32, ptr %1, align 4
+  %7 = icmp sle i32 %5, %6
+  br i1 %7, label %then.1, label %else.1
 
-end.1:                                            ; preds = %then.1, %entry
+end.1:                                            ; preds = %else.1, %then.1
+  %fie = phi void [ %12, %end.1 ], [ %13, %end.1 ]
   ret i32 0
 
-then.1:                                           ; preds = %entry, %then.1
-  %curr.tr4 = phi i32 [ %1, %then.1 ], [ %curr, %entry ]
-  %0 = tail call i32 @println(i32 %curr.tr4)
-  %1 = add i32 %curr.tr4, 1
-  %.not = icmp sgt i32 %1, %endval
-  br i1 %.not, label %end.1, label %then.1
+then.1:                                           ; preds = %entry
+  %8 = load i32, ptr %0, align 4
+  %9 = load i32, ptr %0, align 4
+  %10 = add i32 %9, 1
+  %11 = load i32, ptr %1, align 4
+  %12 = call i32 @count(i32 %10, i32 %11)
+  br label %end.1
+
+else.1:                                           ; preds = %entry
+  %13 = load i32, ptr %1, align 4
+  br label %end.1
 }
 
-define i32 @main() local_unnamed_addr {
+define i32 @main() {
 entry:
-  br label %then.1.i
-
-then.1.i:                                         ; preds = %then.1.i, %entry
-  %curr.tr4.i = phi i32 [ %1, %then.1.i ], [ 1, %entry ]
-  %0 = tail call i32 @println(i32 %curr.tr4.i)
-  %1 = add nuw nsw i32 %curr.tr4.i, 1
-  %.not.i = icmp ugt i32 %curr.tr4.i, 499999
-  br i1 %.not.i, label %count.exit, label %then.1.i
-
-count.exit:                                       ; preds = %then.1.i
-  %2 = tail call i32 @println(i32 1)
+  %0 = call i32 @count(i32 1, i32 4)
   ret i32 0
 }

@@ -13,9 +13,7 @@ impl Parser {
                     self.tokens.next();
                     self.parse_paren_expression()
                 }
-                TokenType::LBrack => {
-                    self.parse_array()
-                }
+                TokenType::LBrack => self.parse_array(),
                 // Unary
                 TokenType::Plus | TokenType::Minus | TokenType::Not => self.parse_unop(),
 
@@ -34,6 +32,8 @@ impl Parser {
                 TokenType::Return => self.parse_return(),
 
                 TokenType::Use => self.parse_use(),
+
+                TokenType::Do => self.parse_do(),
 
                 TokenType::Integer(i) => {
                     self.advance();
@@ -123,14 +123,14 @@ impl Parser {
         Ok((ExprValue::UnOp(op, expr), start))
     }
 
-    pub fn parse_index(&mut self) -> Result<(ExprValue, NodePosition)>{
+    pub fn parse_index(&mut self) -> Result<(ExprValue, NodePosition)> {
         self.advance();
         self.tokens.next(); // eat '['
         let expr = self.parse_expression();
         println!("expr {:?}", expr);
         if unwrap_some!(self.tokens.next()).type_ != TokenType::RBrack {
             Err(self.parser_error("Missing closing ']'"))
-        }else{
+        } else {
             todo!()
         }
     }
@@ -158,7 +158,7 @@ impl Parser {
     pub fn parse_array(&mut self) -> Result<(ExprValue, NodePosition)> {
         self.advance();
         let pos = unwrap_some!(self.tokens.next());
-        let mut pos = NodePosition{
+        let mut pos = NodePosition {
             pos: pos.pos,
             line_no: pos.line_no,
             file: pos.file,
@@ -168,7 +168,11 @@ impl Parser {
         self.advance();
         let type_: String = match unwrap_some!(self.tokens.next()).type_ {
             TokenType::Identifier(n) => n,
-            _ => return Err(self.parser_error("Expected array type after declaration. Eg: [i32 1.2.3]")),
+            _ => {
+                return Err(
+                    self.parser_error("Expected array type after declaration. Eg: [i32 1.2.3]")
+                )
+            }
         };
 
         if unwrap_some!(self.tokens.peek()).type_ == TokenType::RBrack {
@@ -199,7 +203,6 @@ impl Parser {
             }
         }
         Ok((ExprValue::Array(expressions, type_), pos))
-
     }
 
     pub fn parse_if_else(&mut self) -> Result<(ExprValue, NodePosition)> {
@@ -209,63 +212,31 @@ impl Parser {
         let mut type_ = String::from("void");
         let mut hastype = !true;
 
+        // if unwrap_some!(self.tokens.peek()).type_ == TokenType::Colon {
+        //     self.advance();
+        //     self.tokens.next(); // Eat ':'
+
+        //     if let TokenType::Identifier(t) = &unwrap_some!(self.tokens.peek()).type_ {
+        //         type_ = t.clone();
+        //         hastype = true;
+        //     }
+        //     if hastype {
+        //         self.advance();
+        //         self.tokens.next(); // Eat type
+        //     }
+        // }
+
+
+        let cond = Box::new(self.parse_expression().unwrap().0);
+        
         if unwrap_some!(self.tokens.peek()).type_ == TokenType::Colon {
             self.advance();
             self.tokens.next(); // Eat ':'
-            
-            if let TokenType::Identifier(t) = &unwrap_some!(self.tokens.peek()).type_ {
-                type_ = t.clone();
-                hastype=true;
-            }
-            if hastype {
-                self.advance();
-                self.tokens.next(); // Eat type
-            }
-
-        }
-        
-        let mut expressions_if: Vec<ExprValue> = Vec::new();
-        let mut expressions_else: Vec<ExprValue> = Vec::new();
-
-        let cond = Box::new(self.parse_expression().unwrap().0);
-
-        if unwrap_some!(self.tokens.peek()).type_ == TokenType::Do {
-            self.advance();
-            self.tokens.next(); // Eat 'do'
-        } else {
-            return Err(self.parser_error("expected 'do' after condition."));
+        }else {
+            return Err("expected ':'".to_string())
         }
 
-        loop {
-            match self.parse_expression() {
-                Ok((expr, _)) => expressions_if.insert(expressions_if.len(), expr),
-                Err(e) if e == self.parser_error("Invalid expression") => {
-                    if unwrap_some!(self.tokens.peek()).type_ == TokenType::End
-                        || unwrap_some!(self.tokens.peek()).type_ == TokenType::Semicolon
-                    {
-                        break;
-                    } else {
-                        return Err(e);
-                    }
-                }
-                Err(e) => return Err(e),
-            }
-            // Eat the semicolons
-            match unwrap_some!(self.tokens.peek()).type_ {
-                TokenType::Semicolon => {
-                    self.advance();
-                    self.tokens.next();
-                    continue;
-                }
-                TokenType::End => break,
-                _ => return Err(self.parser_error("Expected ';' or 'end'")),
-            }
-        }
-
-        if unwrap_some!(self.tokens.peek()).type_ == TokenType::End {
-            self.advance();
-            self.tokens.next(); // Eat 'end'
-        } // No other case
+        let mut expression_if = Box::new(self.parse_expression().unwrap().0);
 
         if unwrap_some!(self.tokens.peek()).type_ == TokenType::Else {
             self.advance();
@@ -274,8 +245,8 @@ impl Parser {
             return Ok((
                 ExprValue::IfElse {
                     cond,
-                    if_: expressions_if,
-                    else_: Vec::new(),
+                    if_: expression_if,
+                    else_: Box::new(ExprValue::Integer(0)),
                     type_,
                 },
                 NodePosition {
@@ -286,52 +257,67 @@ impl Parser {
             ));
         }
 
-        if unwrap_some!(self.tokens.peek()).type_ == TokenType::Do {
+        if unwrap_some!(self.tokens.peek()).type_ == TokenType::Colon {
             self.advance();
-            self.tokens.next(); // Eat 'do'
-        } else {
-            return Err(self.parser_error("Expected 'do'"));
+            self.tokens.next(); // Eat ':'
+        }else{
+            return Err("expected ':'".to_string())
         }
 
-        loop {
-            match self.parse_expression() {
-                Ok((expr, _)) => expressions_else.insert(expressions_else.len(), expr),
-                Err(e) if e == self.parser_error("Invalid expression") => {
-                    if unwrap_some!(self.tokens.peek()).type_ == TokenType::End
-                        || unwrap_some!(self.tokens.peek()).type_ == TokenType::Semicolon
-                    {
-                        break;
-                    } else {
-                        return Err(e);
-                    }
-                }
-                Err(e) => return Err(e),
-            }
-            // Eat the semicolons
-            match unwrap_some!(self.tokens.peek()).type_ {
-                TokenType::Semicolon => {
-                    self.advance();
-                    self.tokens.next();
-                    continue;
-                }
-                TokenType::End => break,
-                _ => return Err(self.parser_error("Expected ';' or 'end'")),
-            }
-        }
+        let mut expression_else = Box::new(self.parse_expression().unwrap().0);
 
-        if unwrap_some!(self.tokens.peek()).type_ == TokenType::End {
-            self.advance();
-            self.tokens.next(); // Eat '}'
-        } else {
-            return Err(self.parser_error("Missing closing 'end' at else."));
-        }
+
         Ok((
             ExprValue::IfElse {
                 cond,
-                if_: expressions_if,
-                else_: expressions_else,
-                type_
+                if_: expression_if,
+                else_: expression_else,
+                type_,
             },
+            NodePosition {
+                pos: nx.pos,
+                line_no: nx.line_no,
+                file: nx.file,
+            },
+        ))
+    }
+
+    pub fn parse_do(&mut self) -> Result<(ExprValue, NodePosition)>{
+       self.advance();
+       let nx = unwrap_some!(self.tokens.next()); // Eat 'do'
+       let mut expressions = vec![];
+       loop {
+           match self.parse_expression() {
+               Ok((expr, _)) => expressions.insert(expressions.len(), expr),
+               Err(e) if e == self.parser_error("Invalid expression") => {
+                   if unwrap_some!(self.tokens.peek()).type_ == TokenType::End
+                       || unwrap_some!(self.tokens.peek()).type_ == TokenType::Semicolon
+                   {
+                       break;
+                   } else {
+                       return Err(e);
+                   }
+               }
+               Err(e) => return Err(e),
+           }
+           // Eat the semicolons
+           match unwrap_some!(self.tokens.peek()).type_ {
+               TokenType::Semicolon => {
+                   self.advance();
+                   self.tokens.next();
+                   continue;
+               }
+               TokenType::End => break,
+               _ => continue,
+           }
+       }
+
+       if unwrap_some!(self.tokens.peek()).type_ == TokenType::End {
+           self.advance();
+           self.tokens.next(); // Eat 'end'
+        } // No other case
+        return Ok((
+            ExprValue::Do(expressions),
             NodePosition {
                 pos: nx.pos,
                 line_no: nx.line_no,
@@ -344,45 +330,9 @@ impl Parser {
         self.advance();
         let nx = unwrap_some!(self.tokens.next()); // Eat 'while'
         let condition = self.parse_expression().unwrap().0;
-        let mut expressions: Vec<ExprValue> = Vec::new();
-        if unwrap_some!(self.tokens.peek()).type_ == TokenType::Do {
-            self.advance();
-            self.tokens.next(); // Eat 'do'
-        } else {
-            return Err(self.parser_error("Expected 'do' after condition"));
-        }
-        loop {
-            match self.parse_expression() {
-                Ok((expr, _)) => expressions.insert(expressions.len(), expr),
-                Err(e) if e == self.parser_error("Invalid expression") => {
-                    if unwrap_some!(self.tokens.peek()).type_ == TokenType::End
-                        || unwrap_some!(self.tokens.peek()).type_ == TokenType::Semicolon
-                    {
-                        break;
-                    } else {
-                        return Err(e);
-                    }
-                }
-                Err(e) => return Err(e),
-            }
-            // Eat the semicolons
-            match unwrap_some!(self.tokens.peek()).type_ {
-                TokenType::Semicolon => {
-                    self.advance();
-                    self.tokens.next();
-                    continue;
-                }
-                TokenType::End => break,
-                _ => return Err(self.parser_error("Expected ';' or 'end'")),
-            }
-        }
 
-        if unwrap_some!(self.tokens.peek()).type_ == TokenType::End {
-            self.advance();
-            self.tokens.next(); // Eat 'end'
-        } // No other case
         Ok((
-            ExprValue::While(Box::new(condition), expressions),
+            ExprValue::While(Box::new(condition), Box::new(self.parse_expression().unwrap().0)),
             NodePosition {
                 pos: nx.pos,
                 line_no: nx.line_no,
@@ -417,19 +367,27 @@ impl Parser {
             match val {
                 Ok((v, pos)) => {
                     return Ok((
-                        ExprValue::VarDecl { name, type_, value: Some(Box::new(v)) },
+                        ExprValue::VarDecl {
+                            name,
+                            type_,
+                            value: Some(Box::new(v)),
+                        },
                         NodePosition {
                             pos: nx.pos,
                             line_no: nx.line_no,
                             file: nx.file,
                         },
                     ))
-                },
+                }
                 Err(e) => return Err(e),
             }
         } else {
             Ok((
-                ExprValue::VarDecl { name, type_, value:None },
+                ExprValue::VarDecl {
+                    name,
+                    type_,
+                    value: None,
+                },
                 NodePosition {
                     pos: nx.pos,
                     line_no: nx.line_no,

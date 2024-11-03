@@ -1,6 +1,6 @@
 use crate::c_str;
 use crate::generator::Generator;
-use crate::parser::{Function, ExprValue, External};
+use crate::parser::{ExprValue, External, Function};
 use crate::Result;
 use llvm_sys::core;
 use llvm_sys::prelude::LLVMTypeRef;
@@ -14,9 +14,7 @@ impl Generator {
         let mut arg_types: Vec<LLVMTypeRef> = Vec::new();
 
         for arg in args.type_.iter() {
-            arg_types.insert(arg_types.len(),
-                self.str_to_type(arg.to_string())
-            )
+            arg_types.insert(arg_types.len(), self.str_to_type(arg.to_string()))
         }
 
         let return_type = self.str_to_type(function.return_type.clone());
@@ -68,24 +66,22 @@ impl Generator {
         }
 
         self.scope_var_names.borrow_mut().push(Vec::new());
-        
+
         for expr in &function.expressions {
             self.gen_expression(&expr)?;
         }
 
         if let Some(ExprValue::Return(_)) = &function.expressions.last() {
-        }else{
-            
+        } else {
             let zero = core::LLVMConstInt(self.i32_type(), 0 as u64, false as i32);
-            core::LLVMBuildRet(self.builder, zero);       
+            core::LLVMBuildRet(self.builder, zero);
         }
 
         let mut local_vars_mut = self.local_vars.borrow_mut();
         for var in self.scope_var_names.borrow().last().unwrap() {
-            
             local_vars_mut.remove(var);
         }
-        
+
         self.scope_var_names.borrow_mut().pop();
         Ok(())
     }
@@ -100,9 +96,7 @@ impl Generator {
         let mut arg_types: Vec<LLVMTypeRef> = Vec::new();
 
         for arg in args.type_.iter() {
-            arg_types.insert(arg_types.len(),
-                self.str_to_type(arg.clone())
-            )
+            arg_types.insert(arg_types.len(), self.str_to_type(arg.clone()))
         }
 
         let return_type = self.str_to_type(function.return_type.clone());

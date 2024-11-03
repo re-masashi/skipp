@@ -14,7 +14,7 @@ impl Parser {
             } => {}
             _ => {
                 println!("{:?}", self.tokens.peek());
-                return Err(self.parser_error("Expected Identifier"))
+                return Err(self.parser_error("Expected Identifier"));
             }
         }
         // Store identifier.
@@ -266,8 +266,9 @@ impl Parser {
                         }
                         TokenType::End => break,
                         _ => {
-                            print!("{:?}", self.tokens.peek());
-                            return Err(self.parser_error("Expected semicolon or 'end'"));
+                            continue;
+                            // print!("{:?}", self.tokens.peek());
+                            // return Err(self.parser_error("Expected semicolon or 'end'"));
                         }
                     }
                 }

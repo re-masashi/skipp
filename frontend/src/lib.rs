@@ -1,6 +1,6 @@
+pub mod generator;
 pub mod lexer;
 pub mod parser;
-pub mod generator;
 
 use clap::{App, Arg};
 use log::LevelFilter;
@@ -124,11 +124,7 @@ pub fn init_cli() -> CLIInput {
         .to_str()
         .unwrap();
 
-    let default_output_path = format!(
-        "{}.{}",
-        input_name,
-        "out"
-    );
+    let default_output_path = format!("{}.{}", input_name, "out");
 
     CLIInput {
         input_path: String::from(input_path),

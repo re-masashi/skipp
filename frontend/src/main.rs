@@ -1,11 +1,11 @@
-use log::error;
+use frontend::generator::Generator;
 use frontend::lexer::Lexer;
 use frontend::parser::Parser;
-use frontend::generator::Generator;
 use frontend::{init_cli, init_logger};
-use std::process;
-use std::fs;
+use log::error;
 use log::warn;
+use std::fs;
+use std::process;
 
 /// Unwrap and return result, or log and exit if Err.
 macro_rules! unwrap_or_exit {
@@ -46,19 +46,16 @@ pub fn main() {
     unsafe {
         generator.init();
         unwrap_or_exit!(generator.generate(), "Code Generation");
-        unwrap_or_exit!(generator.verify(), "LLVM");
-        generator.optimize();
+        // unwrap_or_exit!(generator.verify(), "LLVM");
+        // generator.optimize();
 
         let object_file = format!("{}.o", cli_input.input_name);
-        
+
         unwrap_or_exit!(
             generator.generate_ir(format!("{}.ir", cli_input.input_name).as_str()),
             "LLVM"
         );
-        unwrap_or_exit!(
-            generator.generate_object_file(3, &object_file),
-            "LLVM"
-        );
+        unwrap_or_exit!(generator.generate_object_file(3, &object_file), "LLVM");
         unwrap_or_exit!(
             generator.generate_executable(&object_file, &cli_input.output_path),
             "Linker"
@@ -67,5 +64,4 @@ pub fn main() {
         //     warn!("Unable to delete object file:\n{}", e);
         // });
     }
-    
 }

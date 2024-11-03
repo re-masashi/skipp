@@ -1,10 +1,10 @@
 use crate::lexer::tokens::{Token, TokenType};
 use crate::SymbolTable;
 
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::BufRead;
 use std::iter::Peekable;
-use std::collections::HashMap;
 
 use std::vec::IntoIter;
 
@@ -38,7 +38,7 @@ pub enum AstNode {
     Extern(External),
     FunctionDef(Function),
     Class(Class),
-    Struct(String, HashMap<String, String>),
+    Struct(String, HashMap<String, (String, i32)>),
     Expression(ExprValue),
 }
 
@@ -54,12 +54,12 @@ pub enum ExprValue {
     VarDecl {
         name: String,
         type_: String,
-        value: Option<Box<ExprValue>>
+        value: Option<Box<ExprValue>>,
     },
     IfElse {
         cond: Box<ExprValue>,
-        if_: Vec<ExprValue>,
-        else_: Vec<ExprValue>,
+        if_: Box<ExprValue>,
+        else_: Box<ExprValue>,
         type_: String,
     },
     Assign {
@@ -74,8 +74,9 @@ pub enum ExprValue {
     Return(Box<ExprValue>),
     Use(String),
     // Walrus(Box<ExprValue>, String, Box<ExprValue>),
-    While(Box<ExprValue>, Vec<ExprValue>),
+    While(Box<ExprValue>, Box<ExprValue>),
     Array(Vec<ExprValue>, String),
+    Do(Vec<ExprValue>),
 }
 
 // 'extern' name (args) '->' return_type
